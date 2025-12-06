@@ -2,103 +2,109 @@ const Usuario = require("./Usuario.class");
 const pool = require("../../config/db");
 
 class Aluno extends Usuario {
-    constructor(
-        usuario_id,
-        modoIntensivo = false,
-        diagnostico = "",
-        planoEstudosId = null,
-        ranking = 0,
-        xp = 0,
-        progresso_percent = 0
-    ) {
-        super(usuario_id); // herda da classe Usuario
-        this.usuario_id         = usuario_id;
-        this.modoIntensivo      = modoIntensivo;
-        this.diagnostico        = diagnostico;
-        this.planoEstudosId     = planoEstudosId;
-        this.ranking            = ranking;
-        this.xp                 = xp;
-        this.progresso_percent  = progresso_percent;
-    }
+  constructor(
+    usuario_id,
+    modoIntensivo = false,
+    diagnostico = "",
+    planoEstudosId = null,
+    ranking = 0,
+    xp = 0,
+    progresso_percent = 0
+  ) {
+    super(usuario_id);
+    this.usuario_id = usuario_id;
+    this.modoIntensivo = modoIntensivo;
+    this.diagnostico = diagnostico;
+    this.planoEstudosId = planoEstudosId;
+    this.ranking = ranking;
+    this.xp = xp;
+    this.progresso_percent = progresso_percent;
+  }
 
-    // Listar todos os alunos
-    static async listar() {
-        const [rows] = await connection.query("SELECT * FROM alunos");
-        return rows;
-    }
+  // Listar todos os alunos (Mantido)
+  static async listar() {
+    const result = await pool.query("SELECT * FROM alunos");
+    return result.rows;
+  }
 
-    // Cadastrar novo aluno
-    static async cadastrar(usuario_id, modoIntensivo = false) {
-        try {
-            await pool.query(
-                `INSERT INTO alunos 
+  // Cadastrar novo aluno - CORRIGIDO PARA RECEBER E USAR A CONEXÃO DEDICADA
+  static async cadastrar(usuario_id, modoIntensivo = false, connection = pool) {
+    // <--- ADICIONADO 'connection'
+    try {
+      // AGORA USA O PARÂMETRO 'connection' (que será o 'client' na transação)
+      await connection.query(
+        `INSERT INTO alunos 
                 (usuario_id, modoIntensivo, ranking, xp, progresso_percent) 
-                VALUES (?, ?, 0, 0, 0)`,
-                [usuario_id, modoIntensivo,]
-            );
-            return usuario_id;
-        } catch (err) {
-            console.error("Erro ao cadastrar aluno:", err.sqlMessage || err.message);
-            throw new Error("Erro ao cadastrar aluno: " + (err.sqlMessage || err.message));
-        }
+                VALUES ($1, $2, 0, 0, 0)`,
+        [usuario_id, modoIntensivo]
+      );
+      return usuario_id;
+    } catch (err) {
+      console.error("Erro ao cadastrar aluno:", err.message);
+      throw new Error("Erro ao cadastrar aluno: " + err.message);
     }
+  }
 
-    // Editar informações do aluno
-    static async editar(usuario_id, dados) {
-        const { modoIntensivo, ranking, xp, progresso_percent } = dados;
-        await pool.query(
-            `UPDATE alunos 
-            SET modoIntensivo = ?, ranking = ?, xp = ?, progresso_percent = ? 
-            WHERE usuario_id = ?`,
-            [modoIntensivo, ranking, xp, progresso_percent, usuario_id]
-        );
-        return true;
+  // ... (restante dos métodos inalterados, pois já usavam o pool global e não estavam na transação)
+
+  static async editar(usuario_id, dados) {
+    const { modoIntensivo, ranking, xp, progresso_percent } = dados;
+    await pool.query(
+      `UPDATE alunos 
+            SET modoIntensivo = $1, ranking = $2, xp = $3, progresso_percent = $4 
+            WHERE usuario_id = $5`,
+      [modoIntensivo, ranking, xp, progresso_percent, usuario_id]
+    );
+    return true;
+  }
+
+  static async deletar(usuario_id) {
+    await pool.query("DELETE FROM alunos WHERE usuario_id = $1", [usuario_id]);
+    return true;
+  }
+
+  static async buscarPorId(usuario_id) {
+    const result = await pool.query(
+      "SELECT * FROM alunos WHERE usuario_id = $1",
+      [usuario_id]
+    );
+    return result.rows[0] || null;
+  }
+
+  static async ativarModoIntensivo(usuario_id, modoIntensivo = true) {
+    await pool.query(
+      "UPDATE alunos SET modoIntensivo = $1 WHERE usuario_id = $2",
+      [modoIntensivo, usuario_id]
+    );
+    return true;
+  }
+
+  static async checkRanking(usuario_id) {
+    const result = await pool.query(
+      "SELECT ranking, xp FROM alunos WHERE usuario_id = $1",
+      [usuario_id]
+    );
+    return result.rows[0] || null;
+  }
+
+  static async addXp(usuario_id, xp) {
+    try {
+      await pool.query("UPDATE alunos SET xp = xp + $1 WHERE usuario_id = $2", [
+        xp,
+        usuario_id,
+      ]);
+
+      const result = await pool.query(
+        "SELECT xp FROM alunos WHERE usuario_id = $1",
+        [usuario_id]
+      );
+
+      return result.rows[0];
+    } catch (err) {
+      console.error("Erro ao adicionar XP:", err);
+      throw new Error("Erro interno ao adicionar XP.");
     }
-
-    // Deletar aluno
-    static async deletar(usuario_id) {
-        await pool.query("DELETE FROM alunos WHERE usuario_id = ?", [usuario_id]);
-        return true;
-    }
-
-    // Buscar aluno por ID
-    static async buscarPorId(usuario_id) {
-        const [rows] = await pool.query("SELECT * FROM alunos WHERE usuario_id = ?", [usuario_id]);
-        return rows[0] || null;
-    }
-
-    // Ativar ou desativar modo intensivo
-    static async ativarModoIntensivo(usuario_id, modoIntensivo = true) {
-        await pool.query("UPDATE alunos SET modoIntensivo = ? WHERE usuario_id = ?", [modoIntensivo, usuario_id]);
-        return true;
-    }
-
-    // Consultar ranking e XP
-    static async checkRanking(usuario_id) {
-        const [rows] = await pool.query("SELECT ranking, xp FROM alunos WHERE usuario_id = ?", [usuario_id]);
-        return rows[0] || null;
-    }
-
-    static async addXp(usuario_id, xp) {
-        try {
-            // Atualiza o XP
-            await pool.query(
-                "UPDATE alunos SET xp = xp + ? WHERE usuario_id = ?",
-                [xp, usuario_id]
-            );
-
-            // Retorna o XP atualizado
-            const [rows] = await pool.query(
-                "SELECT xp FROM alunos WHERE usuario_id = ?",
-                [usuario_id]
-            );
-
-            return rows[0]; // { xp: valorAtualizado }
-        } catch (err) {
-            console.error("Erro ao adicionar XP:", err);
-            throw new Error("Erro interno ao adicionar XP.");
-        }
-    }   
+  }
 }
 
 module.exports = Aluno;

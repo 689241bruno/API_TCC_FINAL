@@ -1,13 +1,31 @@
-const mysql = require("mysql2/promise");
+require("dotenv").config();
+const { Pool } = require("pg");
+const CONNECTION_STRING = process.env.DATABASE_URL;
 
-const pool = mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "macawdemy",
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
+if (!CONNECTION_STRING) {
+  console.error(
+    "Erro: A variável de ambiente DATABASE_URL não está definida no .env!"
+  );
+  process.exit(1);
+}
+
+const pool = new Pool({
+  connectionString: CONNECTION_STRING,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
+pool.on("connect", () => {
+  console.log("Conexão com PostgreSQL (Neon) estabelecida com sucesso!");
+});
+
+pool.on("error", (err) => {
+  console.error("Erro inesperado no pool do PostgreSQL:", err);
+  process.exit(-1);
 });
 
 module.exports = pool;

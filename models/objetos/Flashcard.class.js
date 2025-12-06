@@ -21,25 +21,23 @@ class Flashcard {
     this.repeticoes = repeticoes;
   }
 
-  // Listar todos os flashcards
   static async listar(usuario_id) {
-    const [rows] = await pool.query(
-      "SELECT * FROM flashcards WHERE usuario_id = ?",
+    const result = await pool.query(
+      "SELECT * FROM flashcards WHERE usuario_id = $1",
       [usuario_id]
     );
-    return rows;
+    return result.rows;
   }
 
-  // Criar flashcard
   static async criar(usuario_id, pergunta, resposta, materia, repeticoes = 4) {
     try {
       const ultimaRevisao = new Date();
       const proximaRevisao = null;
 
-      const [result] = await pool.query(
+      const result = await pool.query(
         `INSERT INTO flashcards 
-                (usuario_id, pergunta, resposta, materia, ultima_revisao, proxima_revisao, repeticoes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                 (usuario_id, pergunta, resposta, materia, ultima_revisao, proxima_revisao, repeticoes)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
         [
           usuario_id,
           pergunta,
@@ -51,47 +49,44 @@ class Flashcard {
         ]
       );
 
-      return result.insertId;
+      return result.rows[0].id;
     } catch (err) {
-      console.error("Erro ao criar Flashcard: ", err.sqlMessage || err.message);
+      console.error("Erro ao criar Flashcard: ", err.message);
       throw new Error("Erro ao criar Flashcard.");
     }
   }
 
-  // Editar flashcard
   static async editar(id, dados) {
     const { pergunta, resposta, materia, proximaRevisao, repeticoes } = dados;
     await pool.query(
       `UPDATE flashcards 
-             SET pergunta = ?, resposta = ?, materia = ?, proxima_revisao = ?, repeticoes = ?
-             WHERE id = ?`,
+             SET pergunta = $1, resposta = $2, materia = $3, proxima_revisao = $4, repeticoes = $5
+             WHERE id = $6`,
       [pergunta, resposta, materia, proximaRevisao, repeticoes, id]
     );
     return true;
   }
 
-  // Deletar flashcard
   static async deletar(id) {
-    await pool.query("DELETE FROM flashcards WHERE id = ?", [id]);
+    await pool.query("DELETE FROM flashcards WHERE id = $1", [id]);
     return true;
   }
 
-  // Revisar flashcard
   static async revisar(id) {
     try {
-      const [flashcards] = await pool.query(
-        "SELECT repeticoes FROM flashcards WHERE id = ?",
+      const result = await pool.query(
+        "SELECT repeticoes FROM flashcards WHERE id = $1",
         [id]
       );
+      const flashcards = result.rows;
 
       if (flashcards.length === 0) {
-        throw new Error("Flashcard não encontrado!");
+        throw new new Error("Flashcard não encontrado!")();
       }
 
       const flashcard = flashcards[0];
       const repeticoes = flashcard.repeticoes || 4;
 
-      // cálculo da nova revisão baseado na quantidade de repetições
       const diasEntreRevisoes = Math.floor(30 / repeticoes);
       const agora = new Date();
       const proximaRevisao = new Date();
@@ -99,8 +94,8 @@ class Flashcard {
 
       await pool.query(
         `UPDATE flashcards
-                 SET ultima_revisao = ?, proxima_revisao = ?
-                 WHERE id = ?`,
+                 SET ultima_revisao = $1, proxima_revisao = $2
+                 WHERE id = $3`,
         [agora, proximaRevisao, id]
       );
 
