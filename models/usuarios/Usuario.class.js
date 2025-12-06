@@ -135,11 +135,6 @@ class Usuario {
         valores.push(dados.cor);
       }
 
-      if (dados.fotos_url !== undefined) {
-        campos.push(`fotos_url = $${placeholderIndex++}`);
-        valores.push(dados.fotos_url);
-      }
-
       if (campos.length === 0) return;
 
       // Busca o usuário atual antes de atualizar

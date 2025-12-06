@@ -12,7 +12,7 @@ cloudinary.config({
 // 2. Função de Upload
 async function uploadImageToCloudinary(
   fileBuffer,
-  folderName = "img_perfil_usuario"
+  folderName = "img_perfil_usuarios"
 ) {
   // Nota: O Multer geralmente fornece o tipo de arquivo. Se não estiver usando o Multer
   // de forma que armazene o tipo, você pode tentar detectar ou usar um padrão.
