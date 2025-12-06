@@ -111,7 +111,7 @@ class Aluno extends Usuario {
             a.usuario_id AS id, 
             u.nome, 
             a.xp,
-            u.url_foto
+            u.fotos_url
         FROM
             alunos a
         JOIN
@@ -136,7 +136,7 @@ class Aluno extends Usuario {
       // A TABELA CORRETA É 'usuarios', não 'alunos', pois a coluna de foto está lá.
       const sql = `
                 UPDATE usuarios 
-                SET url_foto = $1 
+                SET fotos_url = $1 
                 WHERE id = $2
             `;
       await pool.query(sql, [url_foto, usuario_id]);
