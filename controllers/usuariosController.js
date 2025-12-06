@@ -116,10 +116,12 @@ exports.editarUsuario = [
 
       let fotoUrl = null;
 
-      // 2. Se um arquivo foi enviado (file.buffer existe), faz o upload
       if (file && file.buffer) {
-        // Chama o serviço para enviar o Buffer e retorna a URL
-        fotoUrl = await uploadImageToCloudinary(file.buffer);
+        // Assumindo que o ID do usuário está no corpo da requisição
+        const usuarioId = id;
+
+        // 2. Chama o serviço, passando o Buffer e o ID
+        fotoUrl = await uploadImageToCloudinary(file.buffer, usuarioId);
       }
 
       // 3. Monta o objeto de atualização
