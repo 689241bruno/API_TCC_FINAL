@@ -220,17 +220,10 @@ class Usuario {
       const rows = result.rows;
 
       if (rows.length === 0) {
-        return null; // retorna null se o usuário não existir
+        return null;
       }
 
       const usuario = rows[0];
-
-      // ✅ Converte buffer para Base64
-      if (usuario.foto) {
-        const base64 = Buffer.from(usuario.foto).toString("base64");
-        usuario.foto = `data:image/jpeg;base64,${base64}`;
-      }
-
       return usuario;
     } catch (err) {
       console.error("Erro ao buscar usuário por ID:", err);
