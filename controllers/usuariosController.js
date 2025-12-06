@@ -1,6 +1,12 @@
 const Usuario = require("../models/usuarios/Usuario.class");
 const Aluno = require("../models/usuarios/Aluno.class");
 const pool = require("../config/db");
+const multer = require("multer"); // 1. Importa o Multer
+const { uploadImageToCloudinary } = require("../utils/cloudinaryService"); // 2. Importa o Serviço Cloudinary
+
+// Configuração do Multer para MEMORY STORAGE (Armazena como Buffer)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // Lista todos os usuários
 exports.listarUsuarios = async (req, res) => {
@@ -15,13 +21,11 @@ exports.listarUsuarios = async (req, res) => {
 
 // Cria um novo usuário
 exports.criarUsuario = async (req, res) => {
-  // AQUI ESTÁ A CORREÇÃO PRINCIPAL
-  let client; // Declara o cliente fora do bloco try para que ele esteja acessível no finally
+  let client;
   try {
     console.log("📦 Dados recebidos do frontend:", req.body);
     const { nome, email, senha, is_aluno, is_professor, is_admin } = req.body;
 
-    // 1. Obtém uma conexão dedicada (client) e inicia a transação
     client = await pool.connect();
     await client.query("BEGIN");
 
@@ -29,7 +33,6 @@ exports.criarUsuario = async (req, res) => {
     const professorFlag = is_professor ?? 0;
     const adminFlag = is_admin ?? 0;
 
-    // 2. Cria o usuário base, passando o cliente da transação
     const usuario = await Usuario.cadastrar(
       nome,
       email,
@@ -37,17 +40,15 @@ exports.criarUsuario = async (req, res) => {
       alunoFlag,
       professorFlag,
       adminFlag,
-      client // Passando o cliente dedicado
+      client
     );
 
     const usuario_id = usuario.id;
 
-    // 3. Se for aluno, cria o registro em alunos, usando o cliente da transação
     if (alunoFlag === 1) {
       await Aluno.cadastrar(usuario_id, false, client);
     }
 
-    // 4. Se tudo deu certo, confirma a transação
     await client.query("COMMIT");
 
     res.status(201).json({
@@ -60,16 +61,14 @@ exports.criarUsuario = async (req, res) => {
       is_admin: adminFlag,
     });
   } catch (err) {
-    // Se houve erro, desfaz a transação
     if (client) {
       await client.query("ROLLBACK");
     }
     console.error("Erro no cadastro do usuário:", err);
     res.status(500).json({ erro: "Erro ao criar usuário!" });
   } finally {
-    // 5. Libera a conexão
     if (client) {
-      client.release(); // Substitui connection.release()
+      client.release();
     }
   }
 };
@@ -84,7 +83,6 @@ exports.login = async (req, res) => {
       return res.status(401).json({ erro: "Email ou senha inválidos!" });
     }
 
-    // ⚠️ Remove senha antes de retornar
     delete usuario.senha;
 
     res.status(200).json({
@@ -97,40 +95,58 @@ exports.login = async (req, res) => {
   }
 };
 
-// Editar
-exports.editarUsuario = async (req, res) => {
-  const { id, nome, email, cor, foto } = req.body;
+// Editar - FINALIZADO PARA CLOUDINARY
+exports.editarUsuario = [
+  // 1. Middleware Multer: processa o arquivo no campo 'foto' e coloca o Buffer em req.file.buffer
+  upload.single("foto"),
 
-  try {
-    console.log("📦 Dados recebidos para edição:", {
-      id,
-      nome,
-      cor,
-      temFoto: !!foto,
-    });
+  async (req, res) => {
+    // Campos de texto vêm de req.body
+    const { id, nome, email, cor } = req.body;
+    // O arquivo vem de req.file
+    const file = req.file;
 
-    let fotoBuffer = null;
-    if (foto && foto.startsWith("data:image")) {
-      // converte base64 para buffer
-      const base64Data = foto.split(",")[1];
-      fotoBuffer = Buffer.from(base64Data, "base64");
+    try {
+      console.log("📦 Dados recebidos para edição:", {
+        id,
+        nome,
+        cor,
+        temFoto: !!file,
+      });
+
+      let fotoUrl = null;
+
+      // 2. Se um arquivo foi enviado (file.buffer existe), faz o upload
+      if (file && file.buffer) {
+        // Chama o serviço para enviar o Buffer e retorna a URL
+        fotoUrl = await uploadImageToCloudinary(file.buffer);
+      }
+
+      // 3. Monta o objeto de atualização
+      const dadosParaAtualizar = {
+        nome,
+        email,
+        cor,
+        // Se fotoUrl não for null, ela será a nova foto
+        foto: fotoUrl,
+      };
+
+      // 4. Se havia lógica antiga de foto no body (base64) e não há novo file,
+      // a lógica do seu frontend deve parar de enviar a foto no body se usar o multer.
+      // A lógica antiga de foto no body FOI REMOVIDA AQUI:
+
+      const usuarioAtualizado = await Usuario.editar(id, dadosParaAtualizar);
+
+      res.json({
+        mensagem: "Usuário atualizado com sucesso!",
+        usuario: usuarioAtualizado,
+      });
+    } catch (err) {
+      console.error("Erro ao editar usuário:", err);
+      res.status(500).json({ erro: "Erro ao editar usuário!" });
     }
-
-    const usuarioAtualizado = await Usuario.editar(id, {
-      nome,
-      email,
-      cor,
-      foto: fotoBuffer,
-    });
-    res.json({
-      mensagem: "Usuário atualizado com sucesso!",
-      usuario: usuarioAtualizado,
-    });
-  } catch (err) {
-    console.error("Erro ao editar usuário:", err);
-    res.status(500).json({ erro: "Erro ao editar usuário!" });
-  }
-};
+  },
+];
 
 // Deletar
 exports.deletarUsuario = async (req, res) => {
