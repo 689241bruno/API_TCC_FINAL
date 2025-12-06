@@ -96,46 +96,39 @@ exports.login = async (req, res) => {
 };
 
 // Editar - FINALIZADO PARA CLOUDINARY
+// controllers/usuariosController.js
+
 exports.editarUsuario = [
-  // 1. Middleware Multer: processa o arquivo no campo 'foto' e coloca o Buffer em req.file.buffer
   upload.single("foto"),
 
   async (req, res) => {
-    // Campos de texto vêm de req.body
     const { id, nome, email, cor } = req.body;
-    // O arquivo vem de req.file
     const file = req.file;
 
+    // Inicializa como undefined para não ser enviado se não houver foto
+    let fotoUrl = undefined;
+
     try {
-      console.log("📦 Dados recebidos para edição:", {
-        id,
-        nome,
-        cor,
-        temFoto: !!file,
-      });
+      console.log("📦 Dados recebidos:", { id, nome, cor, temFoto: !!file });
 
-      let fotoUrl = null;
-
+      // 1. Tenta Upload APENAS se houver arquivo
       if (file && file.buffer) {
-        // Assumindo que o ID do usuário está no corpo da requisição
-        const usuarioId = id;
-
-        // 2. Chama o serviço, passando o Buffer e o ID
-        fotoUrl = await uploadImageToCloudinary(file.buffer, usuarioId);
+        // Passa o ID para sobrescrever a imagem antiga (mantendo a pasta limpa)
+        fotoUrl = await uploadImageToCloudinary(file.buffer, id);
       }
 
-      // 3. Monta o objeto de atualização
+      // 2. Monta o objeto de atualização
       const dadosParaAtualizar = {
         nome,
         email,
         cor,
-        fotos_url: fotoUrl,
+        // 🛑 TRUQUE DE MESTRE:
+        // Se fotoUrl for válido (string), adiciona ao objeto.
+        // Se for undefined/null, NÃO adiciona, e o banco mantém a foto antiga.
+        ...(fotoUrl && { fotos_url: fotoUrl }),
       };
 
-      // 4. Se havia lógica antiga de foto no body (base64) e não há novo file,
-      // a lógica do seu frontend deve parar de enviar a foto no body se usar o multer.
-      // A lógica antiga de foto no body FOI REMOVIDA AQUI:
-
+      // 3. Envia para o Model
       const usuarioAtualizado = await Usuario.editar(id, dadosParaAtualizar);
 
       res.json({
