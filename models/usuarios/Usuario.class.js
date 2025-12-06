@@ -125,14 +125,19 @@ class Usuario {
         valores.push(senhaHash);
       }
 
-      if (dados.foto) {
-        campos.push(`foto = $${placeholderIndex++}`);
-        valores.push(dados.foto); // já é buffer vindo do multer
+      if (dados.fotos_url !== undefined) {
+        campos.push(`fotos_url = $${placeholderIndex++}`);
+        valores.push(dados.fotos_url);
       }
 
       if (dados.cor) {
         campos.push(`cor = $${placeholderIndex++}`);
         valores.push(dados.cor);
+      }
+
+      if (dados.fotos_url !== undefined) {
+        campos.push(`fotos_url = $${placeholderIndex++}`);
+        valores.push(dados.fotos_url);
       }
 
       if (campos.length === 0) return;
@@ -214,9 +219,10 @@ class Usuario {
 
   static async buscarPorId(id) {
     try {
-      const result = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
-        id,
-      ]);
+      const result = await pool.query(
+        "SELECT id, nome, email, is_aluno, is_professor, is_admin, cor, criado_em, fotos_url FROM usuarios WHERE id = $1",
+        [id]
+      );
       const rows = result.rows;
 
       if (rows.length === 0) {

@@ -127,8 +127,7 @@ exports.editarUsuario = [
         nome,
         email,
         cor,
-        // Se fotoUrl não for null, ela será a nova foto
-        foto: fotoUrl,
+        fotos_url: fotoUrl,
       };
 
       // 4. Se havia lógica antiga de foto no body (base64) e não há novo file,
