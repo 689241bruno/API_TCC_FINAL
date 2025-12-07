@@ -64,29 +64,36 @@ class Redacao {
   }
 
   static async getRedacaoByAlunoID(alunoId) {
-      const [rows] = await pool.query(
-          "SELECT * FROM redacoes WHERE aluno_id = ? ORDER BY data DESC",
-          [alunoId]
-      );
-      return rows;
+    const [rows] = await pool.query(
+      "SELECT * FROM redacoes WHERE aluno_id = $1 ORDER BY data DESC",
+      [alunoId]
+    );
+    return rows;
   }
 
-  static async getRedacaoByID(id){
-    const [rows] = await pool.query(
-        "SELECT * FROM redacoes WHERE id = ?",
-        [id]
-    );
-    return rows
+  static async getRedacaoByID(id) {
+    const [rows] = await pool.query("SELECT * FROM redacoes WHERE id = ?", [
+      id,
+    ]);
+    return rows;
   }
 
   static async saveRedacao(dados) {
     try {
       console.log("Recebido no backend:", dados);
 
-      const { 
-        aluno_id, tema, titulo, texto, 
-        comp1 = 0, comp2 = 0, comp3 = 0, comp4 = 0, comp5 = 0, 
-        nota_ia = null, feedback = ""
+      const {
+        aluno_id,
+        tema,
+        titulo,
+        texto,
+        comp1 = 0,
+        comp2 = 0,
+        comp3 = 0,
+        comp4 = 0,
+        comp5 = 0,
+        nota_ia = null,
+        feedback = "",
       } = dados;
 
       const dataAtual = new Date().toISOString().slice(0, 10);
@@ -96,14 +103,22 @@ class Redacao {
         (aluno_id, tema, titulo, texto, data, comp1, comp2, comp3, comp4, comp5, nota_ia, feedback, corrigida)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         [
-          aluno_id, tema, titulo, texto, dataAtual,
-          comp1, comp2, comp3, comp4, comp5,
-          nota_ia, feedback
+          aluno_id,
+          tema,
+          titulo,
+          texto,
+          dataAtual,
+          comp1,
+          comp2,
+          comp3,
+          comp4,
+          comp5,
+          nota_ia,
+          feedback,
         ]
       );
 
       return { id: result.insertId, ...dados, data: dataAtual };
-
     } catch (error) {
       console.error("ERRO NO saveRedacao:", error);
       throw error;
