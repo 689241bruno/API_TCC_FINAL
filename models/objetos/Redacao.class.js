@@ -64,11 +64,11 @@ class Redacao {
   }
 
   static async getRedacaoByAlunoID(alunoId) {
-    const [rows] = await pool.query(
+    const resultadoQuery = await pool.query(
       "SELECT * FROM redacoes WHERE aluno_id = $1 ORDER BY data DESC",
       [alunoId]
     );
-    return rows;
+    return resultadoQuery.rows;
   }
 
   static async getRedacaoByID(id) {
