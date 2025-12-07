@@ -9,7 +9,11 @@ router.post("/login", usuarioController.login);
 
 router.delete("/delusuario", usuarioController.deletarUsuario);
 
-router.put("/editusuario", usuarioController.editarUsuario);
+router.put(
+  "/editusuario",
+  upload.single("foto"),
+  usuarioController.editarUsuario
+);
 router.get("/usuario/:id", usuarioController.buscarPorId);
 
 router.get("/verificar-tipo", usuarioController.verificarTipo);
