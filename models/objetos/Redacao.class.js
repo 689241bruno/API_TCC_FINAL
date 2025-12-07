@@ -1,10 +1,7 @@
 const pool = require("../../config/db");
 
 class Redacao {
-  constructor(
-    id,
-    aluno_id // ... (omiti o constructor para brevidade, ele não precisa de mudanças)
-  ) {
+  constructor(id, aluno_id) {
     this.id = id;
     this.aluno_id = aluno_id;
     this.titulo = titulo;
@@ -71,9 +68,9 @@ class Redacao {
 
       const result = await pool.query(
         `INSERT INTO redacoes 
-        (aluno_id, tema, titulo, texto, data, comp1, comp2, comp3, comp4, comp5, nota_ia, feedback, corrigida)
-        VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8, $9, $10, $11, TRUE)
-        RETURNING id`,
+       (aluno_id, tema, titulo, texto, data, comp1, comp2, comp3, comp4, comp5, nota_ia, feedback, corrigida)
+       VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8, $9, $10, $11, TRUE)
+       RETURNING id`,
         [
           aluno_id,
           tema,
@@ -137,10 +134,10 @@ class Redacao {
 
     const result = await pool.query(
       `INSERT INTO tema_redacao
-            (tema, ano, titulo_texto1, titulo_texto2, titulo_texto3, titulo_texto4,
-            texto1, texto2, texto3, texto4, img1, img2, img3, img4)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-             RETURNING id`,
+        (tema, ano, titulo_texto1, titulo_texto2, titulo_texto3, titulo_texto4,
+        texto1, texto2, texto3, texto4, img1, img2, img3, img4)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        RETURNING id`,
       [
         tema,
         ano,
@@ -165,11 +162,11 @@ class Redacao {
   static async editarTema(id, dados) {
     const result = await pool.query(
       `UPDATE tema_redacao SET
-                tema = $1, ano = $2,
-                titulo_texto1 = $3, titulo_texto2 = $4, titulo_texto3 = $5, titulo_texto4 = $6,
-                texto1 = $7, texto2 = $8, texto3 = $9, texto4 = $10,
-                img1 = $11, img2 = $12, img3 = $13, img4 = $14
-            WHERE id = $15`,
+      tema = $1, ano = $2,
+      titulo_texto1 = $3, titulo_texto2 = $4, titulo_texto3 = $5, titulo_texto4 = $6,
+      texto1 = $7, texto2 = $8, texto3 = $9, texto4 = $10,
+      img1 = $11, img2 = $12, img3 = $13, img4 = $14
+      WHERE id = $15`,
       [
         dados.tema,
         dados.ano,
