@@ -30,84 +30,32 @@ exports.listarMaterias = async (req, res) => {
 };
 
 exports.publicarMateria = async (req, res) => {
-<<<<<<< HEAD
-    try {
-        if (!req.file) {
-            return res.status(400).json({ erro: "Nenhum arquivo enviado."});
-        }
-
-        const { tema, subtema, titulo, materia, criado_por} = req.body;
-        const arquivoURL = null;
-        if (req.file) {
-            console.log("Iniciando upload para AWS S3...");
-            arquivoURL = await uploadToS3(
-                req.file.buffer, 
-                req.file.originalname, 
-                req.file.mimetype
-            );
-            console.log("Upload concluído. URL:", arquivoURL);
-        }
-
-        if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivo) {
-            return res.status(400).json({ erro: "Preencha todos os campos e selecione um arquivo." });
-        }
-
-        await Professor.publicarMaterial(tema, subtema, titulo, materia, arquivo, criado_por);
-        res.status(201).json({ mensagem: "Material publicado com sucesso em backend!" });
-
-    } catch (err) {
-        console.error("Erro ao publicar material:", err);
-        res.status(500).json({ erro: "Erro ao publicar material." });
-=======
   try {
     if (!req.file) {
       return res.status(400).json({ erro: "Nenhum arquivo enviado." });
->>>>>>> 4e216e50fb142e5a8c93f4ee62fd225ddbd5c93d
     }
 
     const { tema, subtema, titulo, materia, criado_por } = req.body;
-    const arquivo = req.file ? req.file.buffer : null;
+    let arquivoURL = null;
+    
+    console.log("Iniciando upload para AWS S3...");
+    arquivoURL = await uploadToS3(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+    console.log("Upload concluído. URL:", arquivoURL);
 
-    if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivo) {
-      return res
-        .status(400)
-        .json({ erro: "Preencha todos os campos e selecione um arquivo." });
+    if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivoURL) {
+      return res.status(400).json({ erro: "Preencha todos os campos e selecione um arquivo." });
     }
 
-    await Professor.publicarMaterial(
-      tema,
-      subtema,
-      titulo,
-      materia,
-      arquivo,
-      criado_por
-    );
-    res
-      .status(201)
-      .json({ mensagem: "Material publicado com sucesso em backend!" });
+    await Professor.publicarMaterial(tema, subtema, titulo, materia, arquivoURL, criado_por);
+    res.status(201).json({ mensagem: "Material publicado com sucesso!" });
   } catch (err) {
     console.error("Erro ao publicar material:", err);
     res.status(500).json({ erro: "Erro ao publicar material." });
   }
-
-  const { tema, subtema, titulo, materia, criado_por } = req.body;
-  const arquivo = req.file ? req.file.buffer : null;
-
-  if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivo) {
-    return res
-      .status(400)
-      .json({ erro: "Preencha todos os campos e selecione um arquivo." });
-  }
-
-  await Professor.publicarMaterial(
-    tema,
-    subtema,
-    titulo,
-    materia,
-    arquivo,
-    criado_por
-  );
-  res.status(201).json({ mensagem: "Material publicado com sucesso!" });
 };
 
 exports.atualizarProgresso = async (req, res) => {

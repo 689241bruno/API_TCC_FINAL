@@ -27,7 +27,6 @@ exports.cadastrarAdmin = async (req, res) => {
   }
 };
 exports.listarAdmins = async (req, res) => {
-<<<<<<< HEAD
     try {
         const admins = await Admin.listar();
         res.json(admins);
@@ -47,13 +46,3 @@ exports.alterClass = async(req, res) => {
         res.status(500).json({ erro: "Erro ao alterar administradores!" });
     }
 }
-=======
-  try {
-    const admins = await Admin.listar();
-    res.json(admins);
-  } catch (err) {
-    console.error("Erro ao listar admins:", err);
-    res.status(500).json({ erro: "Erro ao listar administradores!" });
-  }
-};
->>>>>>> 4e216e50fb142e5a8c93f4ee62fd225ddbd5c93d
