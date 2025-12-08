@@ -58,7 +58,7 @@ class Material {
 
       return materiais;
     } catch (err) {
-      console.error("Erro SQL no listarMaterial:", err);
+      console.error("Erro SQL no listar Material:", err);
       throw err;
     }
   }

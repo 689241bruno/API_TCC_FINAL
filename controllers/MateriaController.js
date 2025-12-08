@@ -40,7 +40,7 @@ exports.publicarMateria = async (req, res) => {
         }
 
         await Professor.publicarMaterial(tema, subtema, titulo, materia, arquivo, criado_por);
-        res.status(201).json({ mensagem: "Material publicado com sucesso!" });
+        res.status(201).json({ mensagem: "Material publicado com sucesso em backend!" });
 
     } catch (err) {
         console.error("Erro ao publicar material:", err);
