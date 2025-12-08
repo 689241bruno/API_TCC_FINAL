@@ -27,30 +27,9 @@ exports.listarMaterias = async (req, res) => {
 };
 
 exports.publicarMateria = async (req, res) => {
-<<<<<<< HEAD
   try {
     if (!req.file) {
       return res.status(400).json({ erro: "Nenhum arquivo enviado." });
-=======
-    try {
-        if (!req.file) {
-            return res.status(400).json({ erro: "Nenhum arquivo enviado."});
-        }
-
-        const { tema, subtema, titulo, materia, criado_por} = req.body;
-        const arquivo = req.file ? req.file.buffer : null;
-
-        if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivo) {
-            return res.status(400).json({ erro: "Preencha todos os campos e selecione um arquivo." });
-        }
-
-        await Professor.publicarMaterial(tema, subtema, titulo, materia, arquivo, criado_por);
-        res.status(201).json({ mensagem: "Material publicado com sucesso em backend!" });
-
-    } catch (err) {
-        console.error("Erro ao publicar material:", err);
-        res.status(500).json({ erro: "Erro ao publicar material." });
->>>>>>> 33356a11214432ef6c6c1c17da6445107dda96cb
     }
 
     const { tema, subtema, titulo, materia, criado_por } = req.body;
@@ -70,11 +49,32 @@ exports.publicarMateria = async (req, res) => {
       arquivo,
       criado_por
     );
-    res.status(201).json({ mensagem: "Material publicado com sucesso!" });
+    res
+      .status(201)
+      .json({ mensagem: "Material publicado com sucesso em backend!" });
   } catch (err) {
     console.error("Erro ao publicar material:", err);
     res.status(500).json({ erro: "Erro ao publicar material." });
   }
+
+  const { tema, subtema, titulo, materia, criado_por } = req.body;
+  const arquivo = req.file ? req.file.buffer : null;
+
+  if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivo) {
+    return res
+      .status(400)
+      .json({ erro: "Preencha todos os campos e selecione um arquivo." });
+  }
+
+  await Professor.publicarMaterial(
+    tema,
+    subtema,
+    titulo,
+    materia,
+    arquivo,
+    criado_por
+  );
+  res.status(201).json({ mensagem: "Material publicado com sucesso!" });
 };
 
 exports.atualizarProgresso = async (req, res) => {
