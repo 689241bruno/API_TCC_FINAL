@@ -52,7 +52,7 @@ class Material {
         subtema: row.subtema,
         materia: row.materia,
         titulo: row.titulo,
-        arquivo: row.arquivo ? row.arquivo.toString("base64") : null,
+        arquivo: row.arquivo,
         criado_por: row.criado_por,
       }));
 
@@ -89,7 +89,7 @@ class Material {
   static async verPDF(id) {
     const result = await pool.query(
       "SELECT arquivo FROM material WHERE id = $1",
-      [id]
+      [id]  
     );
     return result.rows;
   }

@@ -1,6 +1,9 @@
 const Material = require("../models/objetos/Material.class");
 const Professor = require("../models/usuarios/Professor.class");
 
+const { uploadToS3 } = require("../utils/s3")
+
+
 exports.listar = async (req, res) => {
     console.log("[ROTA] GET /materias chamada");
     try {
@@ -33,7 +36,16 @@ exports.publicarMateria = async (req, res) => {
         }
 
         const { tema, subtema, titulo, materia, criado_por} = req.body;
-        const arquivo = req.file ? req.file.buffer : null;
+        const arquivoURL = null;
+        if (req.file) {
+            console.log("Iniciando upload para AWS S3...");
+            arquivoURL = await uploadToS3(
+                req.file.buffer, 
+                req.file.originalname, 
+                req.file.mimetype
+            );
+            console.log("Upload concluído. URL:", arquivoURL);
+        }
 
         if (!tema || !subtema || !titulo || !materia || !criado_por || !arquivo) {
             return res.status(400).json({ erro: "Preencha todos os campos e selecione um arquivo." });

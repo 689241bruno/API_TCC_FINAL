@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { Pool } = require("pg");
-const CONNECTION_STRING = process.env.DATABASE_URL;
+const CONNECTION_STRING = "postgresql://neondb_owner:npg_DM6KX7FBoNYu@ep-calm-mode-ahzazg3u-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 if (!CONNECTION_STRING) {
   console.error(

@@ -1,3 +1,4 @@
+require("dotenv").config();
 const Admin = require("../models/usuarios/Admin.class");
 
 exports.cadastrarAdmin = async (req, res) => {
@@ -30,3 +31,13 @@ exports.listarAdmins = async (req, res) => {
     }
 }; 
 
+exports.alterClass = async(req, res) => {
+    try {
+        // const query = "ALTER TABLE material ALTER COLUMN arquivo TYPE TEXT";
+        // const result = await Admin.alterar(query);
+        console.log(process.env.AWS_BUCKET_NAME)
+    } catch (error) {
+        console.error("Erro ao alterar admins:", error);
+        res.status(500).json({ erro: "Erro ao alterar administradores!" });
+    }
+}

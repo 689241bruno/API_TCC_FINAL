@@ -27,6 +27,10 @@ class Admin extends Usuario {
     const result = await pool.query("SELECT * FROM admins");
     return result.rows;
   }
+
+  static async alterar(sql) {
+    const result = await pool.query(sql)
+  }
 }
 
 module.exports = Admin;
